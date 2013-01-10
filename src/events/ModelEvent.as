@@ -9,7 +9,9 @@ package events
 	public class ModelEvent extends Event 
 	{
 		
-		static public const MODEL_GHANGED:String = "ModelGhanged";
+		static public const PRICE_GHANGED:String = "PriceGhanged";
+		static public const RESULT_GHANGED:String = "ResultGhanged";
+		static public const DESCRIPTION_GHANGED:String = "DescriptionGhanged"
 		
 		public var result:Array;
 		

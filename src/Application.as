@@ -10,7 +10,7 @@ package
 	import mvc.View;
 	
 	/**
-	 * ...
+	 * ...Application Entry Point Class
 	 * @author Leonid Trofimchuk
 	 */
 	public class Application extends Sprite 
@@ -40,13 +40,18 @@ package
 		{
 			if (hasEventListener(Event.ADDED_TO_STAGE))
 				removeEventListener(Event.ADDED_TO_STAGE, addedToStage);
-				
 			loadData();	
 		}
 		
+//-------------------------------------------------------------------------------------------------
+//
+//  Methods
+//
+//-------------------------------------------------------------------------------------------------	
+			
 		private function loadData():void 
 		{
-			info = new InfoText(18, 0x00ff00);
+			info = new InfoText(18, 0x000000);
 			info.text = "Load Data...";
 			addChild(info);
 			
@@ -67,7 +72,6 @@ package
 			info = null;
 			
 			var xmlList:XMLList = readXML.getList();
-			
 			_list = new Array();
 			
 			for (var i:int = 0; i < xmlList.length(); i++)
@@ -77,15 +81,25 @@ package
 				data["author"] = String(xmlList[i].author);
 				data["title"] = String(xmlList[i].title);
 				data["genre"] = String(xmlList[i].genre);
-				data["price"] = String(xmlList[i].price);
+				data["price"] = Number(xmlList[i].price);
 				data["publish_date"] = String(xmlList[i].publish_date);
-				data["description"] = String(xmlList[i].description);
+				
+				var description:String = String(xmlList[i].description);
+				
+				//String Format
+				var arr:Array;
+				arr = description.split("\r");
+				description = arr.join("");
+				arr = description.split("  ");
+				description = arr.join("");
+				data["description"] = description;
 				
 				_list.push(data);
 			}
 			
 			initMVC();
 		}
+		
 		private function initMVC():void 
 		{
 			model = new Model(_list);

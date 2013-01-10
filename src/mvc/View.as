@@ -1,15 +1,19 @@
 package mvc 
 {
 	import com.greensock.TweenMax;
+	import components.MinMaxPrice;
 	import events.ModelEvent;
 	import fl.controls.ComboBox;
 	import fl.controls.DataGrid;
 	import fl.controls.List;
 	import fl.controls.Slider;
 	import fl.data.DataProvider;
+	import fl.events.DataGridEvent;
+	import fl.events.SliderEvent;
 	import flash.display.Sprite;
     import flash.events.Event;
 	import flash.events.KeyboardEvent;
+	import flash.events.TextEvent;
 	import flash.events.TimerEvent;
 	import flash.text.AntiAliasType;
 	import flash.text.TextField;
@@ -29,23 +33,26 @@ package mvc
 		private var _controller:Controller;         				// Controller
 		
 		//////////GUI//////////
-		private var filtersLabel:TextField;
-		private var titleLabel:TextField;
+		private var filtersLabel:TextField;							//Filters Label
+		
+		private var titleLabel:TextField;							//Title Search
 		private var titleInput:TextField;
-		private var comboBoxLabel:TextField;
+		
+		private var comboBoxLabel:TextField;						//ComboBox for Genre Select
 		private var comboBox:ComboBox;
-		private var sliderLabel:TextField;
-		private var slider:Slider;
+		
+		private var sliderLabel:TextField;							//Slider for Price Select
+		private var slider:Slider;									
 		private var minSlider:TextField; 
 		private var maxSlider:TextField; 
-		private var dataGrid:DataGrid;
-		private var descriptionLadel:TextField;
+		private var currentPriceText:TextField; 
+		
+		private var dataGrid:DataGrid;								//Data Grid to show Result
+		
+		private var descriptionLadel:TextField;						//Description of selected Item
 		private var descriptionText:TextField;
 		
-		private var format:TextFormat;
-		
-		
-		
+		private var format:TextFormat;								//TextFormat for TextFields
 		
         public function View(model:Model, controller:Controller)
 		{
@@ -73,10 +80,9 @@ package mvc
 			initListeners();
 		}
 		
-		
 //-------------------------------------------------------------------------------------------------
 //
-//  Methods
+//  Interface Init
 //
 //-------------------------------------------------------------------------------------------------
 		
@@ -138,9 +144,8 @@ package mvc
 			titleInput.border = true;
 			titleInput.background = true;
 			titleInput.backgroundColor = 0xffffff;
-			titleInput.text = "...";
 			titleInput.width = 150;
-			titleInput.height = titleLabel.textHeight + 3;
+			titleInput.height = titleLabel.textHeight + 4;
 			titleInput.x = 90;
 			titleInput.y = 70;
 			addChild(titleInput);
@@ -165,12 +170,12 @@ package mvc
 			comboBox.x = 345;
 			comboBox.y = 69;
 			comboBox.width = 150;
-			
 			for (var i:int = 0 ; i < genres.length; i++)
 			{
 				var genre:String = genres[i];
 				comboBox.addItem({label: genre});
 			}
+			comboBox.selectedIndex = 0;
 			
 			addChild(comboBox);
 		}
@@ -185,7 +190,6 @@ package mvc
 			minSlider.antiAliasType = AntiAliasType.ADVANCED;
 			minSlider.autoSize = TextFieldAutoSize.LEFT;
 			minSlider.selectable = false;
-			minSlider.text = "$20";
 			minSlider.x = 600;
 			minSlider.y = 88;
 			addChild(minSlider);
@@ -196,19 +200,34 @@ package mvc
 			maxSlider.antiAliasType = AntiAliasType.ADVANCED;
 			maxSlider.autoSize = TextFieldAutoSize.LEFT;
 			maxSlider.selectable = false;
-			maxSlider.text = "$100";
 			maxSlider.x = 720;
 			maxSlider.y = 88;
 			addChild(maxSlider);
+			
+			var minMaxPrice:MinMaxPrice = _model.minMaxPrice;
+			setMinMaxLables(minMaxPrice);
+			
+			currentPriceText = new TextField();
+			currentPriceText.defaultTextFormat = format;
+			currentPriceText.antiAliasType = AntiAliasType.ADVANCED;
+			currentPriceText.autoSize = TextFieldAutoSize.LEFT;
+			currentPriceText.selectable = false;
+			currentPriceText.x = 660;
+			currentPriceText.y = 55;
+			addChild(currentPriceText);
+			
+			setCurrentPrice();
 			
 			/////////////
 			slider = new Slider();
 			slider.liveDragging = true;
 			slider.minimum = 0;
-			slider.maximum = 20;
+			slider.maximum = 1;
 			slider.width = 120;
 			slider.x = 620;
 			slider.y = 77;
+			slider.tickInterval = 0;
+			slider.snapInterval = 0.01;
 			addChild(slider);
 			
 			////////////
@@ -236,6 +255,89 @@ package mvc
 			dataGrid.columns = ["ID", "Author", "Title", "Genre", "Price", "Publish Date"];
 			
 			var list:Array = _model.result;
+			setDataGridItems(list);
+			
+			addChild(dataGrid);
+		}
+		
+		private function initDescription():void 
+		{	
+			descriptionLadel = new TextField();
+			descriptionLadel.defaultTextFormat = format;
+			descriptionLadel.antiAliasType = AntiAliasType.ADVANCED;
+			descriptionLadel.autoSize = TextFieldAutoSize.LEFT;
+			descriptionLadel.selectable = false;
+			descriptionLadel.text = "Description:";
+			descriptionLadel.x = 20;
+			descriptionLadel.y = 372;
+			addChild(descriptionLadel);
+			
+			//////////////
+			descriptionText = new TextField();
+			descriptionText.defaultTextFormat = format;
+			descriptionText.antiAliasType = AntiAliasType.ADVANCED;
+			descriptionLadel.autoSize = TextFieldAutoSize.LEFT;
+			descriptionText.multiline = true;
+			descriptionText.wordWrap = true;
+			descriptionText.border = true;
+			descriptionText.background = true;
+			descriptionText.backgroundColor = 0xffffff;
+			descriptionText.width = stage.stageWidth - 40;
+			descriptionText.height = 80;
+			descriptionText.x = 20;
+			descriptionText.y = 398;
+			addChild(descriptionText);
+			descriptionText.restrict
+			
+			/////////////
+			var description:String;
+			description = _model.description;
+			setDescription(description);
+		}
+		
+		//
+		public function initListeners():void 
+		{
+			titleInput.addEventListener(Event.CHANGE, filters_change);
+			comboBox.addEventListener(Event.CHANGE, filters_change);
+			slider.addEventListener(Event.CHANGE, filters_change);
+			
+			dataGrid.addEventListener(Event.CHANGE, dataGrid_change);
+			
+			_model.addEventListener(ModelEvent.PRICE_GHANGED, model_priceGhanged);
+			_model.addEventListener(ModelEvent.RESULT_GHANGED, model_resultGhanged);
+			_model.addEventListener(ModelEvent.DESCRIPTION_GHANGED, model_descriptionGhanged);
+		}
+		
+		
+//-------------------------------------------------------------------------------------------------
+//
+//  Private Methods
+//
+//-------------------------------------------------------------------------------------------------
+		
+		private function setMinMaxLables(minMaxPrice:MinMaxPrice):void
+		{
+			var min:String = "$" + String(minMaxPrice.minPrice);
+			var max:String = "$" + String(minMaxPrice.maxPrice);
+			
+			minSlider.text = min; 
+			maxSlider.text = max; 
+		}
+		
+		
+		private function setCurrentPrice():void 
+		{
+			var currentPrice:Number = _model.currentPrice;
+			var priceString:String = "$" + String(currentPrice);
+			
+			if(priceString != currentPriceText.text)
+				currentPriceText.text = priceString;
+		}
+		
+		private function setDataGridItems(list:Array):void 
+		{
+			dataGrid.removeAll();
 			
 			for (var i:int = 0; i < list.length; i++)
 			{
@@ -251,44 +353,12 @@ package mvc
 				
 				dataGrid.addItem(items);
 			}
-			addChild(dataGrid);
 		}
 		
-		private function initDescription():void 
+		private function setDescription(description:String):void
 		{
-			/////////////
-			descriptionLadel = new TextField();
-			descriptionLadel.defaultTextFormat = format;
-			descriptionLadel.antiAliasType = AntiAliasType.ADVANCED;
-			descriptionLadel.autoSize = TextFieldAutoSize.LEFT;
-			descriptionLadel.selectable = false;
-			descriptionLadel.text = "Description:";
-			descriptionLadel.x = 20;
-			descriptionLadel.y = 372;
-			addChild(descriptionLadel);
-			
-			//////////////
-			descriptionText = new TextField();
-			descriptionText.defaultTextFormat = format;
-			descriptionText.antiAliasType = AntiAliasType.ADVANCED;
-			descriptionText.border = true;
-			descriptionText.background = true;
-			descriptionText.backgroundColor = 0xffffff;
-			descriptionText.text = "display description for the selected row...";
-			descriptionText.width = stage.stageWidth - 40;
-			descriptionText.height = 80;
-			descriptionText.x = 20;
-			descriptionText.y = 398;
-			addChild(descriptionText);
+			descriptionText.text = description;
 		}
-		
-		
-		//
-		public function initListeners():void 
-		{
-			_model.addEventListener(ModelEvent.MODEL_GHANGED, model_modelGhanged);
-		}
-		
 		
 //--------------------------------------------------------------------------
 //
@@ -296,9 +366,42 @@ package mvc
 //
 //--------------------------------------------------------------------------
 		
-		private function model_modelGhanged(e:ModelEvent):void 
+		
+///////////////GUI///////
+		private function filters_change(e:Event):void 
 		{
+			var title:String = titleInput.text;
+			var genre:String = comboBox.selectedLabel;
+			var sliderValue:Number = slider.value;
 			
+			_controller.filtersChanged(title, genre, sliderValue);
+		}
+		
+		private function dataGrid_change(e:Event):void 
+		{
+			var index:int = dataGrid.selectedIndex;
+			_controller.changeDataGridItem(index);
+		}
+		
+///////////////MODEL//////
+		private function model_priceGhanged(e:ModelEvent):void 
+		{
+			var minMaxPrice:MinMaxPrice = _model.minMaxPrice;
+			setMinMaxLables(minMaxPrice);
+		}
+		
+		private function model_resultGhanged(e:ModelEvent):void 
+		{
+			setCurrentPrice();
+			var list:Array = e.result;
+			setDataGridItems(list);
+		}
+		
+		private function model_descriptionGhanged(e:ModelEvent):void 
+		{
+			var description:String;
+			description = _model.description;
+			setDescription(description);
 		}
 		
     }

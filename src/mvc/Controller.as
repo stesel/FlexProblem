@@ -1,5 +1,6 @@
 package mvc 
 {
+	import components.MinMaxPrice;
 	import flash.events.Event;
     import flash.events.EventDispatcher;
     import flash.events.MouseEvent;
@@ -19,32 +20,20 @@ package mvc
 		
 //-------------------------------------------------------------------------------------------------
 //
-//  Methods
+// 	Public Methods
 //
 //-------------------------------------------------------------------------------------------------
 		
-		public function stopGame():void 
+			
+		public function changeDataGridItem(index:int):void 
 		{
-			//this._model = null;
+			_model.getDescription(index);
 		}
 		
-		public function menuKeyPressed():void 
+		public function filtersChanged(title:String, genre:String, sliderValue:Number):void 
 		{
-			//this.dispatchEvent(new GameEvent(GameEvent.CALL_MENU));
+			_model.filterDataGrid(title, genre, sliderValue);
 		}
-		
-		public function onBallMissed(title:String):void 
-		{
-			//_model.onBallMissed(title);
-		}
-		
-		
-//-------------------------------------------------------------------------------------------------
-//
-//  Event handlers
-//
-//-------------------------------------------------------------------------------------------------
-		
 		
     }
  

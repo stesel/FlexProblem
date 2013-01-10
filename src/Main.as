@@ -14,6 +14,7 @@ package
 	public class Main extends Sprite 
 	{
 		private var window:NativeWindow;
+		private var application:Application
 		
 		public function Main():void 
 		{
@@ -28,15 +29,13 @@ package
 			if (hasEventListener(Event.ADDED_TO_STAGE))
 				removeEventListener(Event.ADDED_TO_STAGE, addedToStage);
 				
-			//stage.scaleMode = StageScaleMode.NO_SCALE;
-			//stage.align = StageAlign.TOP_LEFT;
-			
+			//Init Window	
 			window = stage.nativeWindow;
 			window.x = 0;
 			window.y = 0;
 			window.title = "Flex Problem";
 			
-			var application:Application = new Application();
+			application = new Application();
 			addChild(application);
 		}
 		

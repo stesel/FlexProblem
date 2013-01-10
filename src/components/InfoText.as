@@ -40,7 +40,7 @@ package  components
 			gradientGlow.ratios = [0, 255]; 
 			gradientGlow.blurX = 2; 
 			gradientGlow.blurY = 2; 
-			gradientGlow.strength = 3;
+			gradientGlow.strength = 1;
 			gradientGlow.quality = BitmapFilterQuality.LOW;
 			gradientGlow.type = BitmapFilterType.OUTER;
 			this.filters = [gradientGlow];
